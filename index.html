@@ -7,6 +7,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lab 9</title>
 
+  <script src="https://cdn.trackjs.com/agent/v3/latest/t.js"></script>
+  <script>
+    window.TrackJS && TrackJS.install({ 
+      token: "41e106fed0e541f0bc8514a05f8b4656"
+      // for more configuration options, see https://docs.trackjs.com
+    });
+  </script>
+
   <style>
     button {
       margin: 3px;
@@ -88,6 +96,15 @@
   </main>
 
   <script>
+    // Step 4 - Custom error type extending the built-in Error object.
+    // Used by the calculator below to signal bad input in a meaningful way.
+    class CalculatorError extends Error {
+      constructor(message) {
+        super(message);
+        this.name = 'CalculatorError';
+      }
+    }
+
     let form = document.querySelector('form');
     form.addEventListener('submit', e => {
       e.preventDefault();
@@ -95,13 +112,132 @@
       let firstNum = document.querySelector('#first-num').value;
       let secondNum = document.querySelector('#second-num').value;
       let operator = document.querySelector('#operator').value;
-      output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+
+      // Step 3 - try/catch/finally with throw for realistic error handling.
+      try {
+        // Validate input before computing. Empty or non-numeric values throw a
+        // custom error rather than letting eval produce a confusing result.
+        if (firstNum.trim() === '' || secondNum.trim() === '') {
+          throw new CalculatorError('Both inputs must be provided');
+        }
+        if (Number.isNaN(Number(firstNum)) || Number.isNaN(Number(secondNum))) {
+          throw new CalculatorError('Both inputs must be valid numbers');
+        }
+        if (operator === '/' && Number(secondNum) === 0) {
+          throw new CalculatorError('Cannot divide by zero');
+        }
+
+        output.innerHTML = eval(`${firstNum} ${operator} ${secondNum}`);
+      } catch (err) {
+        console.error(err.name + ':', err.message);
+        output.innerHTML = err.name + ': ' + err.message;
+      } finally {
+        console.log('Calculation attempt finished');
+      }
     });
 
     let errorBtns = Array.from(document.querySelectorAll('#error-btns > button'));
 
     // Start your code here
     // You may move this JS to another file if you wish
+
+    // ----- Step 2: wire each console button to its matching console method -----
+    // errorBtns is in the same order as the buttons in the HTML, so the index
+    // of each button maps directly to the demo below.
+
+    // 0 - Console Log: print some real data from the calculator form.
+    errorBtns[0].addEventListener('click', () => {
+      let firstNum = document.querySelector('#first-num').value;
+      let secondNum = document.querySelector('#second-num').value;
+      let operator = document.querySelector('#operator').value;
+      console.log('Calculator demo data:', { firstNum, operator, secondNum });
+    });
+
+    // 1 - Console Error
+    errorBtns[1].addEventListener('click', () => {
+      console.error('Demo: this is a console.error message');
+    });
+
+    // 2 - Console Count: the count increments each time you click.
+    errorBtns[2].addEventListener('click', () => {
+      console.count('Console Count button');
+    });
+
+    // 3 - Console Warn
+    errorBtns[3].addEventListener('click', () => {
+      console.warn('Demo: this is a console.warn message');
+    });
+
+    // 4 - Console Assert: the message only appears because the condition is false.
+    errorBtns[4].addEventListener('click', () => {
+      console.assert(1 === 2, 'Demo: assertion failed because 1 !== 2');
+    });
+
+    // 5 - Console Clear
+    errorBtns[5].addEventListener('click', () => {
+      console.clear();
+    });
+
+    // 6 - Console Dir: shows a DOM node as a navigable JS object.
+    errorBtns[6].addEventListener('click', () => {
+      console.dir(document.querySelector('#operator'));
+    });
+
+    // 7 - Console dirxml: shows a DOM node as an XML/HTML tree.
+    errorBtns[7].addEventListener('click', () => {
+      console.dirxml(document.querySelector('main'));
+    });
+
+    // 8 - Console Group Start: open a collapsible group and log inside it.
+    errorBtns[8].addEventListener('click', () => {
+      console.group('Demo group');
+      console.log('This message is nested inside the group');
+    });
+
+    // 9 - Console Group End: close the most recently opened group.
+    errorBtns[9].addEventListener('click', () => {
+      console.groupEnd();
+    });
+
+    // 10 - Console Table: render an array of objects as a table.
+    errorBtns[10].addEventListener('click', () => {
+      console.table([
+        { name: 'Ada', role: 'developer' },
+        { name: 'Alan', role: 'mathematician' },
+        { name: 'Grace', role: 'admiral' },
+      ]);
+    });
+
+    // 11 - Start Timer
+    errorBtns[11].addEventListener('click', () => {
+      console.time('demo-timer');
+    });
+
+    // 12 - End Timer: logs the elapsed time since Start Timer was clicked.
+    errorBtns[12].addEventListener('click', () => {
+      console.timeEnd('demo-timer');
+    });
+
+    // 13 - Console Trace: prints a stack trace at this call site.
+    errorBtns[13].addEventListener('click', () => {
+      console.trace('Demo trace');
+    });
+
+    // ----- Step 5: global error handler -----
+    // Errors thrown outside of a try/catch bubble up to the global scope. We
+    // listen for them here and log a message. (window.onerror is the older
+    // equivalent: window.onerror = (msg) => { console.log(msg); }.)
+    window.addEventListener('error', (e) => {
+      console.log('Global error caught:', e.message);
+    });
+
+    // 14 - Trigger a Global Error: throw an UNCAUGHT error (no try/catch here)
+    // so it reaches the global handler above. We query a DOM node that does not
+    // exist and call a method on it, which simulates the realistic case of a
+    // node being removed or commented out of the HTML.
+    errorBtns[14].addEventListener('click', () => {
+      document.querySelector('#does-not-exist').focus();
+    });
   </script>
 </body>
 
